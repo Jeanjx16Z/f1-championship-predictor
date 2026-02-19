@@ -21,6 +21,7 @@ def build_season_dataset(year: int) -> pd.DataFrame:
 
         try:
             race_df = build_race_summary(year, gp_name)
+            race_df["round_number"] = event["RoundNumber"]
             season_data.append(race_df)
         except Exception as e:
             print(f"Failed {gp_name}: {e}")
