@@ -19,10 +19,24 @@ def load_model_input():
 
 model_input = load_model_input()
 
-#RUN SIMULATION
-champion_prob = simulate_many_seasons(model_input)
-champion_prob = pd.Series(champion_prob, dtype="float64")
-champion_prob = champion_prob.sort_values(ascending=False)
-st.bar_chart(champion_prob)
+simulation_result = simulate_many_seasons(
+    model_input,
+    n_sims=500
+)
+
+champion_prob = simulation_result.sort_values(
+    "champion_prob",
+    ascending=False
+)
+
+st.bar_chart(
+    champion_prob.set_index("driver")["champion_prob"]
+)
 #DISPLAY RESULT 
 st.subheader("Championship Probability")
+
+st.dataframe(
+    champion_prob[
+        ["driver", "champion_prob", "p2_prob", "p3_prob"]
+    ]
+)
