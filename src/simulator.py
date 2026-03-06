@@ -113,8 +113,17 @@ def simulate_many_seasons(
         "P3": p3
     })
 
-    return {
-        "Champion_Prob": results["P1"].value_counts(normalize=True),
-        "P2_Prob": results["P2"].value_counts(normalize=True),
-        "P3_Prob": results["P3"].value_counts(normalize=True)
-    }
+    champion_prob = results["P1"].value_counts(normalize=True)
+    p2_prob = results["P2"].value_counts(normalize=True)
+    p3_prob = results["P3"].value_counts(normalize=True)
+
+    drivers = model_df["driver"].unique()
+
+    final = pd.DataFrame({
+        "driver" : drivers,
+        "champion_prob" : [champion_prob.get(d, 0) for d in drivers],
+        "p2_prob" : [p2_prob.get(d, 0) for d in drivers],
+        "p3_prob" : [p3_prob.get(d, 0) for d in drivers],
+    })
+
+    return final.sort_values("champion_prob", ascending=False)
