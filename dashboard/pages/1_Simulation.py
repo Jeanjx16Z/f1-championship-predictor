@@ -21,7 +21,7 @@ model_input = load_model_input()
 
 simulation_result = simulate_many_seasons(
     model_input,
-    n_sims=500
+    n_sims=5000
 )
 
 champion_prob = simulation_result.sort_values(
