@@ -86,7 +86,7 @@ def simulate_many_seasons(
     model_df: pd.DataFrame,
     n_sims: int = 500,
     n_races: int = 24,
-    noise_std: float = 0.15
+    noise_std: float = 0.60
 ):
     """
     Monte Carlo simulation returning Top 3 finish probability.
