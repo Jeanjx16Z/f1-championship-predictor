@@ -188,4 +188,5 @@ team_points = team_points.sort_values(
     ascending=False
 )
 
-st.dataframe(team_points)
+st.dataframe(team_points) 
+
