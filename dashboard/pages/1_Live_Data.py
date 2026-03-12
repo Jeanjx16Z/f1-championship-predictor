@@ -1,19 +1,8 @@
 import streamlit as st
-import fastf1
-import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from pathlib import Path
 
-# ==============================
-# FastF1 Cache Setup
-# ==============================
-
-project_root = Path(__file__).resolve().parents[2]
-cache_dir = project_root / "cache"
-cache_dir.mkdir(exist_ok=True)
-
-fastf1.Cache.enable_cache(str(cache_dir))
+from utils.fastf1_loader import load_race_session, load_schedule
 
 # ==============================
 # Page Title
@@ -27,8 +16,7 @@ YEAR = 2026
 # Load Season Schedule
 # ==============================
 
-schedule = fastf1.get_event_schedule(YEAR)
-schedule = schedule[schedule["EventFormat"] != "testing"]
+schedule = load_schedule(YEAR)
 
 gp_list = schedule["EventName"].tolist()
 
@@ -44,8 +32,7 @@ st.markdown("---")
 # ==============================
 
 try:
-    session = fastf1.get_session(YEAR, selected_gp, "R")
-    session.load()
+    session = load_race_session(YEAR, selected_gp)
 
 except Exception:
     st.warning(
@@ -69,6 +56,9 @@ try:
     pos = lap.get_pos_data()
 
     track = pos.loc[:, ["X", "Y"]].to_numpy()
+
+    if pos.empty:
+        raise Exception("No position data")
 
     # Try to get circuit info
     try:
@@ -125,6 +115,7 @@ try:
     ax.axis("off")
 
     st.pyplot(fig)
+    plt.close(fig)
 
 except Exception as e:
 
@@ -149,7 +140,7 @@ race_table.columns = [
     "Points"
 ]
 
-st.dataframe(race_table)
+st.dataframe(race_table, width='stretch')
 
 st.markdown("---")
 
