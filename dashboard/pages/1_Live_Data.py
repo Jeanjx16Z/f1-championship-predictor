@@ -1,6 +1,7 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
+import fastf1
 
 from utils.fastf1_loader import load_race_session, load_schedule
 
@@ -11,6 +12,51 @@ from utils.fastf1_loader import load_race_session, load_schedule
 st.title("📡 F1 2026 Live Data")
 
 YEAR = 2026
+LAYOUT_YEAR = 2025
+
+
+# ==============================
+# Cache Functions
+# ==============================
+
+@st.cache_data(show_spinner=False)
+def get_session(year, gp, session_code):
+
+    session = load_race_session(year, gp, session_code)
+    session.load()
+
+    return session
+
+
+@st.cache_data(show_spinner=False)
+def get_layout_session(gp):
+
+    session = load_race_session(
+        LAYOUT_YEAR,
+        gp,
+        "Race"
+    )
+
+    session.load()
+
+    return session
+
+
+@st.cache_data(show_spinner=False)
+def get_event_sessions(year, gp):
+
+    event = fastf1.get_event(year, gp)
+
+    sessions=[]
+
+    for i in range(1, 6):
+
+        session_name = event.get(f"Session{i}")
+
+        if session_name is not None:
+            sessions.append(session_name)
+
+    return sessions
 
 # ==============================
 # Load Season Schedule
@@ -27,18 +73,51 @@ selected_gp = st.selectbox(
 
 st.markdown("---")
 
+
 # ==============================
-# Load Race Session
+# Auto Detect Sessions
+# ==============================
+
+available_sessions = get_event_sessions(
+    YEAR,
+    selected_gp
+)
+
+selected_session = st.selectbox(
+    "Select Session",
+    available_sessions
+)
+
+SESSION_MAP = {
+    "Practice 1": "FP1",
+    "Practice 2": "FP2",
+    "Practice 3": "FP3",
+    "Sprint Qualifying": "Sprint Qualifying",
+    "Sprint": "Sprint",
+    "Qualifying": "Qualifying",
+    "Race": "Race"
+}
+session_code = SESSION_MAP[selected_session]
+# ==============================
+# Load Session
 # ==============================
 
 try:
-    session = load_race_session(YEAR, selected_gp)
+
+    session = get_session(
+        YEAR,
+        selected_gp,
+        session_code
+    )
 
 except Exception:
+
     st.warning(
-        f"Race data for **{selected_gp}** is not available yet."
+        f"{selected_session} data for **{selected_gp}** is not available yet."
     )
+
     st.stop()
+
 
 # ==============================
 # Circuit Layout
@@ -48,32 +127,41 @@ st.subheader(f"🗺 Circuit Layout — {selected_gp}")
 
 try:
 
-    lap = session.laps.pick_fastest()
+    layout_session = get_layout_session(selected_gp)
+
+    lap = layout_session.laps.pick_fastest()
 
     if lap is None:
         raise Exception("No lap data")
 
     pos = lap.get_pos_data()
 
-    track = pos.loc[:, ["X", "Y"]].to_numpy()
-
     if pos.empty:
         raise Exception("No position data")
 
-    # Try to get circuit info
+    track = pos.loc[:, ["X", "Y"]].to_numpy()
+
     try:
-        circuit_info = session.get_circuit_info()
+
+        circuit_info = layout_session.get_circuit_info()
+
         track_angle = circuit_info.rotation / 180 * np.pi
+
     except:
+
         circuit_info = None
         track_angle = 0
 
+
     def rotate(xy, angle):
+
         rot_mat = np.array([
             [np.cos(angle), np.sin(angle)],
             [-np.sin(angle), np.cos(angle)]
         ])
+
         return np.matmul(xy, rot_mat)
+
 
     rotated_track = rotate(track, track_angle)
 
@@ -85,7 +173,6 @@ try:
         linewidth=3
     )
 
-    # Plot corners only if available
     if circuit_info is not None and circuit_info.corners is not None:
 
         for _, corner in circuit_info.corners.iterrows():
@@ -115,78 +202,53 @@ try:
     ax.axis("off")
 
     st.pyplot(fig)
+
     plt.close(fig)
 
-except Exception as e:
+except Exception:
 
-    st.warning("Telemetry data for circuit layout is not available yet.")
+    st.warning(
+        "Telemetry data for circuit layout is not available."
+    )
+
 
 # ==============================
-# Race Result
+# Session Results
 # ==============================
 
-st.subheader(f"🏁 Race Results — {selected_gp}")
+st.subheader(f"🏁 {selected_session} Results — {selected_gp}")
 
 results = session.results
 
-race_table = results[
-    ["Position", "Abbreviation", "TeamName", "Points"]
-].copy()
+display_columns = []
 
-race_table.columns = [
-    "Position",
-    "Driver",
-    "Team",
-    "Points"
-]
+if "Position" in results.columns:
+    display_columns.append("Position")
 
-st.dataframe(race_table, width='stretch')
+if "Abbreviation" in results.columns:
+    display_columns.append("Abbreviation")
 
-st.markdown("---")
+if "TeamName" in results.columns:
+    display_columns.append("TeamName")
 
-# ==============================
-# Driver Standings
-# ==============================
+if "Time" in results.columns:
+    display_columns.append("Time")
 
-st.subheader("🏆 2026 Driver Standings")
+if "Points" in results.columns:
+    display_columns.append("Points")
 
-driver_points = results[
-    ["Abbreviation", "Points"]
-].copy()
+race_table = results[display_columns].copy()
 
-driver_points.columns = [
-    "Driver",
-    "Points"
-]
+rename_map = {
+    "Abbreviation": "Driver",
+    "TeamName": "Team"
+}
 
-driver_points = driver_points.sort_values(
-    "Points",
-    ascending=False
+race_table = race_table.rename(columns=rename_map)
+
+st.dataframe(
+    race_table,
+    width="stretch"
 )
 
-st.dataframe(driver_points)
-
 st.markdown("---")
-
-# ==============================
-# Constructor Standings
-# ==============================
-
-st.subheader("🏭 Constructor Standings")
-
-team_points = results.groupby("TeamName")[
-    "Points"
-].sum().reset_index()
-
-team_points.columns = [
-    "Team",
-    "Points"
-]
-
-team_points = team_points.sort_values(
-    "Points",
-    ascending=False
-)
-
-st.dataframe(team_points) 
-
