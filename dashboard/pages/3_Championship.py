@@ -2,7 +2,7 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import fastf1
 from utils.standings import (
-    calculate_driver_standing,
+    calculate_driver_standings,
     calculate_constructor_standing
 )
 from utils.team_color import TEAM_COLORS
@@ -16,7 +16,7 @@ YEAR = 2026
 st.subheader("Driver Championsip")
 
 with st.spinner("Calculating standings ..."):
-    driver_standings = calculate_driver_standing(YEAR)
+    driver_standings = calculate_driver_standings(YEAR)
 
 st.dataframe(driver_standings, width='stretch')
 
