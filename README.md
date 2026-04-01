@@ -1,245 +1,214 @@
-# 🏎️ F1 Championship Predictor – 2025 Season Simulation
+# 🏎️ F1 Championship Predictor & Analytics Dashboard
 
-A Monte Carlo-based Formula 1 championship prediction model built using historical driver performance metrics and team performance baselines.
+A data-driven Formula 1 championship prediction and race analytics platform combining Monte Carlo simulation, FastF1 telemetry data, and interactive Streamlit dashboards.
 
-This project simulates a full F1 season (24 races) and estimates each driver's probability of becoming World Champion under different competitive scenarios.
+This project integrates **season simulation**, **live race analytics**, and **championship standings calculation** into a unified Formula 1 analytics toolkit.
 
 ---
 
-# 📌 Project Objective
+# 📌 Project Objectives
 
-The goal of this project is to:
-
-- Build a data-driven F1 championship prediction model
-- Combine driver skill and team performance
-- Simulate season outcomes using probabilistic modeling
-- Estimate championship probability using Monte Carlo simulation
-- Model competitive regulation reset scenarios (e.g., 2026 regulation changes)
+* Build a Monte Carlo-based championship prediction model
+* Combine driver skill and team performance
+* Simulate full F1 seasons probabilistically
+* Calculate championship probabilities
+* Provide real-time race analytics dashboard
+* Visualize telemetry and performance comparisons
+* Compute FIA-compliant championship standings (Race + Sprint + Fastest Lap)
 
 ---
 
 # 📂 Project Structure
+
 ```
 f1-championship-predictor/
 │
-├── data/
-│ ├── raw/
-│ └── processed/
-│ ├── driver_ratings_2025.csv
-│ └── team_baseline_2025.csv
+├── dashboard/
+│   ├── pages/
+│   │   ├── 1_Live_Data.py
+│   │   ├── 3_Championship.py
+│   │   └── Races_Analytic.py
+│   │
+│   └── utils/
+│       ├── fastf1_loader.py
+│       ├── standings.py
+│       └── plotting.py
 │
-├── notebooks/
-│ └── 01_data_exploration.ipynb
+├── data/
+│   ├── raw/
+│   └── processed/
 │
 ├── src/
-│ ├── simulator.py
-│ └── rating_engine.py
+│   ├── simulator.py
+│   └── rating_engine.py
 │
 └── README.md
 ```
 
+---
+
+# 📊 Dashboard Features
+
+## 📡 Live Data Page
+
+* Session selector (Practice / Qualifying / Sprint / Race)
+* Automatic session detection from FastF1
+* Circuit layout visualization (2025 fallback for 2026)
+* Session results table
+* Fast loading via Streamlit caching
 
 ---
 
-# 🔎 Phase 1 – Driver Rating Model
+## 🏆 Championship Page
 
-We engineered a driver rating system based on:
+Custom championship calculation including:
 
-- Average points
-- Average finish position
-- Standard deviation of finish
-- DNF rate
-- Wins
-- Podiums
-- Consistency score
+* Race points
+* Sprint points
+* Fastest lap bonus (+1 point, top 10 only)
 
-Each feature was normalized and combined into a final:
-
-This rating represents the intrinsic performance strength of each driver.
-
-Output: driver_ratings_2025.csv 
-
+This improves accuracy compared to official standings that may not immediately include fastest lap adjustments.
 
 ---
 
-# 🏁 Phase 2 – Race Simulation Engine
+## 📈 Race Analytics Page
 
-We built a probabilistic race simulator:
+Interactive visualization tools:
 
-### Core Logic
+### Lap Time Comparison
 
-For each race:
-```
-performance_score = driver_skill + team_strength + random_noise 
-```
+Compare race pace between multiple drivers.
 
-Where:
+### Speed Telemetry
 
-- `driver_skill` → derived from rating
-- `team_strength` → team baseline performance
-- `random_noise` → stochastic race variation
-- DNF probability → applied per driver
-```
-Race results are sorted by performance score and assigned official F1 points:
-[25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
-```
----
+Speed vs distance comparison using fastest lap telemetry.
 
-# 🏆 Phase 3 – Season Simulation
+### Position Changes
 
-A full season is simulated across:
-
-
-For each season:
-
-- All races are simulated
-- Points are accumulated
-- Final standings are computed
-- Champion is determined
-
-```
-Function used: simulate_season()
-```
----
-
-# 🎲 Phase 4 – Monte Carlo Championship Probability
-
-We simulate many seasons:
-```
-n_sims = 100–500+
-```
-
-
-Each simulation:
-
-1. Runs a full 24-race season
-2. Determines the champion
-3. Stores the result
-
-Final output:
-```
-champion_probability
-Example output:
-VER 0.42
-NOR 0.27
-PIA 0.18
-RUS 0.09
-LEC 0.04
-```
-
+Race position evolution across laps.
 
 ---
 
-# 🔧 Phase 5 – Team Baseline Integration
+# 🧠 Championship Scoring Engine
 
-To increase realism, we introduced:
-team_base_rating
-Each driver's performance became:
+The standings engine computes:
+
 ```
-combined_rating = driver_rating + team_rating
-```
-
-This allowed modeling:
-
-- Team dominance eras
-- Constructor performance shifts
-- Competitive reshuffling
-
-Output dataset:
-team_baseline_2025.csv
-
-
----
-
-# 🚨 Phase 6 – Regulation Reset Simulation (2026 Scenario)
-
-We implemented a regulation shock system:
-
-At the start of each simulated season:
-```
-team_2026_rating = team_base_rating + random_shock
+Total Points =
+Race Points
++ Sprint Points
++ Fastest Lap Bonus
 ```
 
-These models:
+Rules implemented:
 
-- Major regulation changes
-- Aero resets
-- Competitive grid reshuffling
-
-Parameter: shock_std
-
-
-Higher values → more chaotic grid  
-Lower values → stable dominance
+* Official FIA race points (Top 10)
+* Sprint race points (Top 8)
+* Fastest lap bonus only if driver finishes Top 10
 
 ---
 
-# ⚙️ Current Simulation Modes
+# 🎲 Monte Carlo Championship Simulation
 
-The simulator now supports:
+The simulator models season outcomes using:
 
-### 1️⃣ Driver-Only Mode
-Pure driver skill simulation.
+```
+performance_score =
+driver_skill
++ team_strength
++ random_noise
+```
 
-### 2️⃣ Driver + Team Mode
-Driver skill combined with team baseline.
+Supports:
 
-### 3️⃣ Regulation Reset Mode
-Driver + team + stochastic team shock.
-
----
-
-# 📊 Model Parameters
-
-| Parameter | Description |
-|-----------|-------------|
-| `noise_std` | Race-to-race variability |
-| `shock_std` | Regulation-era team reshuffle intensity |
-| `n_races` | Number of races per season |
-| `n_sims` | Number of Monte Carlo simulations |
+* Driver-only simulation
+* Driver + team baseline
+* Regulation reset scenarios
 
 ---
 
-# 🧠 Key Insights So Far
+# 🔧 Regulation Reset Simulation (2026)
 
-- Small noise → deterministic champion
-- Large shock_std → realistic title fights
-- Rating gaps strongly influence probability distribution
-- DNF rates meaningfully impact championship variance
+Team performance shock applied:
+
+```
+team_2026_rating =
+team_base_rating + random_shock
+```
+
+Models:
+
+* Regulation changes
+* Competitive reshuffling
+* Aero reset scenarios
 
 ---
 
-# 🚀 Next Planned Improvements
+# 📊 Race Analytics Visualization Engine
 
-- Race-by-race simulation using `round_number`
-- Track-specific performance modifiers
-- Constructor championship simulation
-- Bayesian rating updates mid-season
-- Visualization dashboard
+Reusable plotting functions:
+
+* `plot_lap_times()`
+* `plot_speed_trace()`
+* `plot_position_changes()`
+
+Designed for modular reuse across dashboard pages.
+
+---
+
+# ⚙️ Model Parameters
+
+| Parameter   | Description             |
+| ----------- | ----------------------- |
+| `noise_std` | Race variability        |
+| `shock_std` | Regulation reset impact |
+| `n_races`   | Number of races         |
+| `n_sims`    | Monte Carlo simulations |
+
+---
+
+# 🚀 Current Capabilities
+
+The platform now supports:
+
+* Live race data visualization
+* Telemetry-based analytics
+* Custom championship standings
+* Sprint + fastest lap integration
+* Monte Carlo championship prediction
+* Modular plotting engine
+* Streamlit interactive dashboard
 
 ---
 
 # 🛠️ Technologies Used
 
-- Python
-- Pandas
-- NumPy
-- Monte Carlo Simulation
-- Probabilistic Modeling
+* Python
+* Pandas
+* NumPy
+* Streamlit
+* FastF1
+* Matplotlib
+* Monte Carlo Simulation
 
 ---
 
-# 📈 Current Status
+# 📈 Project Status
 
-The simulation engine is functional and structurally stable.
+Current version includes:
 
-The model successfully:
+* Stable simulation engine
+* Fully working analytics dashboard
+* FIA-compliant standings calculation
+* Telemetry visualization tools
 
-- Generates realistic season standings
-- Estimates championship probability
-- Supports regulation-era simulations
+Next planned improvements:
 
-Further calibration is ongoing to balance dominance vs. competitive variance.
+* Championship progression charts
+* Prediction visualization dashboard
+* Track-specific performance modeling
+* Constructor championship simulation
+* AI-based race insights
 
 ---
 
