@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-
+import fastf1.plotting
 #Base Style
 
 def setup_ax(ax, title):
@@ -57,25 +57,57 @@ def plot_speed_trace(lap, label):
 # 3.Position Changes
 
 def plot_position_changes(laps):
+    import matplotlib.pyplot as plt
 
-    fig, ax = plt.subplots()
+    drivers = laps['Driver'].unique()
+    fig, ax = plt.subplots(figsize=(10,6))
 
-    drivers =  laps["Driver"].unique()
+    # fallback color palette
+    default_colors = plt.cm.tab20.colors
 
-    for drv in drivers:
+    for i, drv in enumerate(drivers):
         drv_laps = laps.pick_driver(drv)
 
+        if drv_laps.empty:
+            continue
+
+        positions = drv_laps['Position']
+        lap_number = drv_laps['LapNumber']
+
+        # Try team color → fallback matplotlib color
+        try:
+            color = "#" + drv_laps['TeamColor'].iloc[0]
+        except:
+            color = default_colors[i % len(default_colors)]
+
         ax.plot(
-            drv_laps["LapNumber"],
-            drv_laps["Position"],
-            label=drv
+            lap_number,
+            positions,
+            color=color,
+            linewidth=2
         )
 
-    setup_ax(ax, "Race Position Changes")
+        # label driver di akhir
+        try:
+            last_lap = lap_number.iloc[-1]
+            last_pos = positions.iloc[-1]
 
+            ax.text(
+                last_lap + 0.3,
+                last_pos,
+                drv,
+                fontsize=8,
+                color=color,
+                verticalalignment='center'
+            )
+        except:
+            pass
+
+    ax.set_title("Race Position Changes")
     ax.set_xlabel("Lap Number")
     ax.set_ylabel("Position")
 
     ax.invert_yaxis()
+    ax.grid(True, linestyle='--', alpha=0.4)
 
     return fig
