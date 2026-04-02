@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import fastf1.plotting
+import pandas as pd
+import numpy as np
 #Base Style
 
 def setup_ax(ax, title):
