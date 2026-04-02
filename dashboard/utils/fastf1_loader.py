@@ -11,7 +11,11 @@ fastf1.Cache.enable_cache(str(cache_dir))
 @st.cache_data
 def load_race_session(year, gp, session_type="Race"):
     session = fastf1.get_session(year, gp, session_type)
-    session.load()
+    session.load(
+        telemetry=True,
+        weather=False,
+        messages=False
+    )
 
     return session
 @st.cache_data
