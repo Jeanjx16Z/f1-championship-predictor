@@ -6,9 +6,6 @@ from utils.plotting import (
     plot_lap_times,
     plot_speed_trace,
     plot_position_changes,
-    calculate_superclip_metric,
-    plot_superclip_comparison,
-    plot_superclip_bar
 )
 
 st.title("📊 Race Analysis")
