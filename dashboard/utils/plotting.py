@@ -112,4 +112,49 @@ def plot_position_changes(laps):
     ax.invert_yaxis()
     ax.grid(True, linestyle='--', alpha=0.4)
 
+    return fig 
+
+def plot_tire_strategy(laps):
+    compound_color = {
+        "SOFT": "#ff3333",
+        "MEDIUM": "#FFD700",
+        "HARD": "#FFFFFF",
+        "INTERMEDIATE": "#43B02A",
+        "WET": "#0067AD"
+    }
+
+    drivers = laps["Driver"].unique()
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    for driver in drivers:
+        drv_laps = laps.pick_driver(driver)
+
+        stints = drv_laps[["Stint", "Compound", "LapNumber"]]
+        stints = stints.groupby(["Stint", "Compound"]).count().reset_index()
+
+        stint_start = 0
+
+        for _, row in stints.iterrows():
+            compound = str(row["Compound"]).upper()
+            stint_length = row["LapNumber"]
+
+            color = compound_color.get(compound, "#888888")
+
+            ax.barh(
+                driver,
+                stint_length,
+                left=stint_start,
+                color=color,
+                edgecolor="black"
+            )
+
+            stint_start += stint_length
+
+    ax.invert_yaxis()
+    ax.set_title("Tire Strategy")
+    ax.set_xlabel("Lap Number")
+    ax.set_ylabel("Driver")
+    ax.grid(True, linestyle="--", alpha=0.3)
+
     return fig
