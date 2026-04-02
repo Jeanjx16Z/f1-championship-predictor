@@ -6,6 +6,7 @@ from utils.plotting import (
     plot_lap_times,
     plot_speed_trace,
     plot_position_changes,
+    plot_tire_strategy,
 )
 
 st.title("📊 Race Analysis")
@@ -80,3 +81,10 @@ except Exception:
 st.subheader("🏁 Position Changes")
 fig = plot_position_changes(laps)
 st.pyplot(fig) 
+
+
+# 3.Tire Strategy
+st.subheader("🛞 Tire Strategy")
+
+fig = plot_tire_strategy(laps)
+st.pyplot(fig)
