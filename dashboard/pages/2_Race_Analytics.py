@@ -1,11 +1,14 @@
 import streamlit as st
 import fastf1 
-
+import pandas as pd
 from utils.fastf1_loader import load_race_session, load_schedule
 from utils.plotting import (
     plot_lap_times,
     plot_speed_trace,
-    plot_position_changes
+    plot_position_changes,
+    calculate_superclip_metric,
+    plot_superclip_comparison,
+    plot_superclip_bar
 )
 
 st.title("📊 Race Analysis")
@@ -31,10 +34,10 @@ try:
         selected_gp,
         "Race"
     )
-    session.load()
+    session.load()   
 
 except Exception:
-    st.warning("Rce data not available")
+    st.warning("Race data not available")
     st.stop()
 
 laps = session.laps
@@ -79,4 +82,4 @@ except Exception:
 
 st.subheader("🏁 Position Changes")
 fig = plot_position_changes(laps)
-st.pyplot(fig)
+st.pyplot(fig) 
